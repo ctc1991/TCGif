@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		186C03CE1EE6566D004C232B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 186C03C71EE6566D004C232B /* AppDelegate.swift */; };
 		186C03CF1EE6566D004C232B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 186C03C81EE6566D004C232B /* Assets.xcassets */; };
-		186C03D01EE6566D004C232B /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 186C03C91EE6566D004C232B /* Info.plist */; };
 		186C03D11EE6566D004C232B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 186C03CA1EE6566D004C232B /* LaunchScreen.storyboard */; };
 		186C03D21EE6566D004C232B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 186C03CB1EE6566D004C232B /* Main.storyboard */; };
 		186C03D51EE65896004C232B /* SwiftVc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 186C03D41EE65896004C232B /* SwiftVc.swift */; };
@@ -182,7 +181,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				186C03D11EE6566D004C232B /* LaunchScreen.storyboard in Resources */,
-				186C03D01EE6566D004C232B /* Info.plist in Resources */,
 				186C03E01EE65C24004C232B /* pikaqiu.gif in Resources */,
 				186C03CF1EE6566D004C232B /* Assets.xcassets in Resources */,
 				186C03D21EE6566D004C232B /* Main.storyboard in Resources */,

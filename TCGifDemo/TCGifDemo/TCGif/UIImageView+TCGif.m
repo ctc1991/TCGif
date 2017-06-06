@@ -52,17 +52,30 @@
     if (placeholderImage) {
         self.image = placeholderImage;
     }
-    NSData *data = [NSData dataWithContentsOfURL:url];
-    [self tc_setGifWithData:data];
+    NSString *path = [[TCGif sharedGif] gifFromCacheWithURL:url];
+    if (path) {
+        [self tc_setGifWithFilePath:path];
+    } else {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                [self tc_setGifWithData:data needCache:YES URL:url];
+            });
+        });
+    }
 }
 
 // 加载 GIF data
 - (void)tc_setGifWithData:(NSData *)data {
+    [self tc_setGifWithData:data needCache:NO URL:nil];
+}
+
+- (void)tc_setGifWithData:(NSData *)data needCache:(BOOL)needCache URL:(NSURL *)url {
     if (data == nil) {
         return;
     }
     NSLog(@"图片大小：%.2f KB", data.length/1024.0);
-    NSMutableArray *imgs = [NSMutableArray array];
+    NSMutableArray *images = [NSMutableArray array];
     CGFloat duration = 0;
     // 通过data获取image的数据源
     CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);
@@ -81,14 +94,17 @@
         //生成image
         UIImage *image = [UIImage imageWithCGImage:imageRef scale:[UIScreen mainScreen].scale orientation:UIImageOrientationUp];
         
-        [imgs addObject:image];
+        [images addObject:image];
         
         CGImageRelease(imageRef);
     }
     CFRelease(source);
-    self.animationImages = imgs;
+    self.animationImages = images;
     self.animationDuration = duration;
     [self startAnimating];
+    if (needCache) {
+        [[TCGif sharedGif] cacheWithImages:images SPF:self.tc_SPF forURL:url];
+    }
 }
 
 @end
