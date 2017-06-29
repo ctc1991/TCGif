@@ -28,8 +28,9 @@
     if (placeholderImage) {
         self.image = placeholderImage;
     }
-    NSData *data = [NSData dataWithContentsOfFile:[[NSBundle mainBundle]pathForResource:name ofType:@"gif"]];
-    [self tc_setGifWithData:data];
+    [[TCGif sharedGif] imagesWithGifName:name completion:^(NSArray *images, CGFloat duration) {
+        [self playGif:images duration:duration];
+    }];
 }
 
 // 沙盒内GIF
@@ -40,8 +41,10 @@
         if (placeholderImage) {
             self.image = placeholderImage;
         }
-        NSData *data = [NSData dataWithContentsOfFile:filePath];
-        [self tc_setGifWithData:data];
+        [[TCGif sharedGif] imagesWithGifFilePath:filePath completion:^(NSArray *images, CGFloat duration) {
+            [self playGif:images duration:duration];
+        }];
+    
 }
 
 // 网络GIF
@@ -52,17 +55,9 @@
     if (placeholderImage) {
         self.image = placeholderImage;
     }
-    NSString *path = [[TCGif sharedGif] gifFromCacheWithURL:url];
-    if (path) {
-        [self tc_setGifWithFilePath:path];
-    } else {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            NSData *data = [NSData dataWithContentsOfURL:url];
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                [self tc_setGifWithData:data needCache:YES URL:url];
-            });
-        });
-    }
+    [[TCGif sharedGif] imagesWithGifURL:url completion:^(NSArray *images, CGFloat duration) {
+        [self playGif:images duration:duration];
+    }];
 }
 
 // 加载 GIF data
@@ -74,37 +69,16 @@
     if (data == nil) {
         return;
     }
-    NSLog(@"图片大小：%.2f KB", data.length/1024.0);
-    NSMutableArray *images = [NSMutableArray array];
-    CGFloat duration = 0;
-    // 通过data获取image的数据源
-    CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);
-    // 获取帧数
-    size_t frames = CGImageSourceGetCount(source);
-    for (size_t i = 0; i < frames; i++) {
-        // 获取gif图一帧的时间
-        NSDictionary *info = (__bridge NSDictionary *)CGImageSourceCopyPropertiesAtIndex(source, i, NULL);
-        NSDictionary *timeDic = [info objectForKey:(__bridge NSString *)kCGImagePropertyGIFDictionary];
-        CGFloat time = [[timeDic objectForKey:(__bridge NSString *)kCGImagePropertyGIFDelayTime] floatValue];
-        duration += time;
-        
-        //获取图像
-        CGImageRef imageRef = CGImageSourceCreateImageAtIndex(source, i, NULL);
-        
-        //生成image
-        UIImage *image = [UIImage imageWithCGImage:imageRef scale:[UIScreen mainScreen].scale orientation:UIImageOrientationUp];
-        
-        [images addObject:image];
-        
-        CGImageRelease(imageRef);
-    }
-    CFRelease(source);
+    [[TCGif sharedGif] imagesWithData:data completion:^(NSArray *images, CGFloat duration) {
+        [self playGif:images duration:duration];
+    }];
+}
+
+// 播放动画
+- (void)playGif:(NSArray *)images duration:(CGFloat)duration {
     self.animationImages = images;
     self.animationDuration = duration;
     [self startAnimating];
-    if (needCache) {
-        [[TCGif sharedGif] cacheWithImages:images SPF:self.tc_SPF forURL:url];
-    }
 }
 
 @end

@@ -151,5 +151,65 @@
 
 }
 
+- (void)imagesWithData:(NSData *)data completion:(void (^)(NSArray *images, CGFloat duration))completion {
+    if (data == nil) {
+        completion([NSMutableArray array], 0);
+    }
+    NSLog(@"图片大小：%.2f KB", data.length/1024.0);
+    NSMutableArray *images = [NSMutableArray array];
+    CGFloat duration = 0;
+    // 通过data获取image的数据源
+    CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);
+    // 获取帧数
+    size_t frames = CGImageSourceGetCount(source);
+    for (size_t i = 0; i < frames; i++) {
+        // 获取gif图一帧的时间
+        NSDictionary *info = (__bridge NSDictionary *)CGImageSourceCopyPropertiesAtIndex(source, i, NULL);
+        NSDictionary *timeDic = [info objectForKey:(__bridge NSString *)kCGImagePropertyGIFDictionary];
+        CGFloat time = [[timeDic objectForKey:(__bridge NSString *)kCGImagePropertyGIFDelayTime] floatValue];
+        duration += time;
+        
+        //获取图像
+        CGImageRef imageRef = CGImageSourceCreateImageAtIndex(source, i, NULL);
+        
+        //生成image
+        UIImage *image = [UIImage imageWithCGImage:imageRef scale:[UIScreen mainScreen].scale orientation:UIImageOrientationUp];
+        
+        [images addObject:image];
+        
+        CGImageRelease(imageRef);
+    }
+    CFRelease(source);
+    completion(images, duration);
+}
+
+// 根目录GIF生成图片数组
+- (void)imagesWithGifName:(NSString *)name completion:(void (^)(NSArray *images, CGFloat duration))completion {
+    NSData *data = [NSData dataWithContentsOfFile:[[NSBundle mainBundle]pathForResource:name ofType:@"gif"]];
+    [self imagesWithData:data completion:completion];
+}
+// 沙盒内GIF生成图片数组
+- (void)imagesWithGifFilePath:(NSString *)filePath completion:(void (^)(NSArray *images, CGFloat duration))completion {
+    NSData *data = [NSData dataWithContentsOfFile:filePath];
+    [self imagesWithData:data completion:completion];
+}
+// 网络GIF生成图片数组
+- (void)imagesWithGifURL:(NSURL *)url completion:(void (^)(NSArray *images, CGFloat duration))completion {
+    NSString *path = [[TCGif sharedGif] gifFromCacheWithURL:url];
+    if (path) {
+        [self imagesWithGifFilePath:path completion:completion];
+    } else {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                [self imagesWithData:data completion:^(NSArray *images, CGFloat duration) {
+                    [self cacheWithImages:images SPF:duration/images.count forURL:url];
+                    completion(images, duration);
+                }];
+            });
+        });
+    }
+}
+
 @end
 

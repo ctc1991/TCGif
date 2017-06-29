@@ -33,4 +33,13 @@
 // 通过一组图片制作新的GIF 并制定存储名称
 - (void)gifWithImages:(NSArray *)images SPF:(CGFloat)SPF forKey:(NSString *)key completion:(void (^)(NSString *filePath))completion;
 
+
+// 根目录GIF生成图片数组
+- (void)imagesWithGifName:(NSString *)name completion:(void (^)(NSArray *images, CGFloat duration))completion;
+// 沙盒内GIF生成图片数组
+- (void)imagesWithGifFilePath:(NSString *)filePath completion:(void (^)(NSArray *images, CGFloat duration))completion;
+// 网络GIF生成图片数组
+- (void)imagesWithGifURL:(NSURL *)url completion:(void (^)(NSArray *images, CGFloat duration))completion;
+
+- (void)imagesWithData:(NSData *)data completion:(void (^)(NSArray *images, CGFloat duration))completion;
 @end
